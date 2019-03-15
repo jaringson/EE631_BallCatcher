@@ -3,6 +3,8 @@
 #include "math.h"
 #include "Hardware.h"
 
+//Search file for TODO to find where to put our code
+
 ImagingResources	CTCSys::IR;
 
 CTCSys::CTCSys()
@@ -51,7 +53,7 @@ void CTCSys::QSStopThread()
 	// Must close the move event first
 	EventEndMove = TRUE;				// Set the falg to true first
 	SetEvent(QSMoveEvent);				// must set event to complete the while loop so the flag can be checked
-	do { 
+	do {
 		Sleep(100);
 		// SetEvent(QSProcessEvent);
 	} while(EventEndProcess == TRUE);
@@ -59,7 +61,7 @@ void CTCSys::QSStopThread()
 
 	// need to make sure camera acquisiton has stopped
 	EventEndProcess = TRUE;
-	do { 
+	do {
 		Sleep(100);
 		// SetEvent(QSProcessEvent);
 	} while(EventEndProcess == TRUE);
@@ -84,7 +86,7 @@ long QSProcessThreadFunc(CTCSys *QS)
 	int     BufID = 0;
 	char    str[32];
     long	FrameStamp;
-    
+
     FrameStamp = 0;
 	while (QS->EventEndProcess == FALSE) {
 #ifdef PTGREY		// Image Acquisition
@@ -93,7 +95,7 @@ long QSProcessThreadFunc(CTCSys *QS)
 				QS->IR.PGRError = QS->IR.pgrCamera[i]->RetrieveBuffer(&QS->IR.PtGBuf[i]);
 				// Get frame timestamp if exact frame time is needed.  Divide FrameStamp by 32768 to get frame time stamp in mSec
                 QS->IR.metaData[i] = QS->IR.PtGBuf[i].GetMetadata();
-				FrameStamp = QS->IR.metaData[i].embeddedTimeStamp;               
+				FrameStamp = QS->IR.metaData[i].embeddedTimeStamp;
 				if(QS->IR.PGRError == PGRERROR_OK){
 					QS->QSSysConvertToOpenCV(&QS->IR.AcqBuf[i], QS->IR.PtGBuf[i]);		// copy image data pointer to OpenCV Mat structure
 				}
@@ -172,7 +174,7 @@ long QSProcessThreadFunc(CTCSys *QS)
 			}
 		}
 		BufID = 1 - BufID;
-	} 
+	}
 	QS->EventEndProcess = FALSE;
 	return 0;
 }
@@ -199,24 +201,24 @@ void CTCSys::QSSysInit()
         AfxMessageBox(CA2W(ErrorMsg), MB_ICONSTOP );
 	} else {
 		IR.NumCameras = (IR.NumCameras > MAX_CAMERA) ? MAX_CAMERA : IR.NumCameras;
-		for(i = 0; i < IR.NumCameras; i++) {		
+		for(i = 0; i < IR.NumCameras; i++) {
 			// Get PGRGuid
 			if (IR.busMgr.GetCameraFromIndex(i, &IR.prgGuid[i]) != PGRERROR_OK) {    // change to 1-i is cameras are swapped after powered up
 				sprintf_s(ErrorMsg, "PGRGuID Failure: %s", IR.PGRError.GetDescription());
 				AfxMessageBox(CA2W(ErrorMsg), MB_ICONSTOP);
 			}
 			IR.pgrCamera[i] = new Camera;
-			if (IR.pgrCamera[i]->Connect(&IR.prgGuid[i]) != PGRERROR_OK) { 
+			if (IR.pgrCamera[i]->Connect(&IR.prgGuid[i]) != PGRERROR_OK) {
 				sprintf_s(ErrorMsg, "PConnect Failure: %s", IR.PGRError.GetDescription());
 				AfxMessageBox(CA2W(ErrorMsg), MB_ICONSTOP);
 			}
 			// Set video mode and frame rate
-			if (IR.pgrCamera[i]->SetVideoModeAndFrameRate(VIDEO_FORMAT, CAMERA_FPS) != PGRERROR_OK) { 
+			if (IR.pgrCamera[i]->SetVideoModeAndFrameRate(VIDEO_FORMAT, CAMERA_FPS) != PGRERROR_OK) {
 				sprintf_s(ErrorMsg, "Video Format Failure: %s", IR.PGRError.GetDescription());
 				AfxMessageBox(CA2W(ErrorMsg), MB_ICONSTOP);
 			}
 			// Set all camera configuration parameters
-			if (IR.pgrCamera[i]->SetConfiguration(&IR.cameraConfig) != PGRERROR_OK) { 
+			if (IR.pgrCamera[i]->SetConfiguration(&IR.cameraConfig) != PGRERROR_OK) {
 				sprintf_s(ErrorMsg, "Set Configuration Failure: %s", IR.PGRError.GetDescription());
 				AfxMessageBox(CA2W(ErrorMsg), MB_ICONSTOP);
 			}
@@ -228,14 +230,14 @@ void CTCSys::QSSysInit()
 			// Set shutter sppeed
 			IR.cameraProperty.type = SHUTTER;
 			IR.cameraProperty.absValue = SHUTTER_SPEED;
-			if(IR.pgrCamera[i]->SetProperty(&IR.cameraProperty, false) != PGRERROR_OK){	
+			if(IR.pgrCamera[i]->SetProperty(&IR.cameraProperty, false) != PGRERROR_OK){
 				sprintf_s(ErrorMsg, "Shutter Failure: %s", IR.PGRError.GetDescription());
 				AfxMessageBox(CA2W(ErrorMsg), MB_ICONSTOP);
 			}
 			// Set gamma value
 			IR.cameraProperty.type = GAMMA;
 			IR.cameraProperty.absValue = 1.0;
-			if(IR.pgrCamera[i]->SetProperty(&IR.cameraProperty, false) != PGRERROR_OK){	
+			if(IR.pgrCamera[i]->SetProperty(&IR.cameraProperty, false) != PGRERROR_OK){
 				sprintf_s(ErrorMsg, "Gamma Failure: %s", IR.PGRError.GetDescription());
 				AfxMessageBox(CA2W(ErrorMsg), MB_ICONSTOP);
 			}
@@ -243,7 +245,7 @@ void CTCSys::QSSysInit()
 			IR.cameraProperty.type = SHARPNESS;
 			IR.cameraProperty.absControl = false;
 			IR.cameraProperty.valueA = 2000;
-			if(IR.pgrCamera[i]->SetProperty(&IR.cameraProperty, false) != PGRERROR_OK){	
+			if(IR.pgrCamera[i]->SetProperty(&IR.cameraProperty, false) != PGRERROR_OK){
 				sprintf_s(ErrorMsg, "Sharpness Failure: %s", IR.PGRError.GetDescription());
 				AfxMessageBox(CA2W(ErrorMsg), MB_ICONSTOP);
 			}
@@ -254,7 +256,7 @@ void CTCSys::QSSysInit()
 			IR.cameraProperty.onOff = true;
 			IR.cameraProperty.valueA = WHITE_BALANCE_R;
 			IR.cameraProperty.valueB = WHITE_BALANCE_B;
-			if(IR.pgrCamera[i]->SetProperty(&IR.cameraProperty, false) != PGRERROR_OK){	
+			if(IR.pgrCamera[i]->SetProperty(&IR.cameraProperty, false) != PGRERROR_OK){
 				ErrorMsg.Format("White Balance Failure: %s",IR.PGRError.GetDescription());
 				AfxMessageBox( ErrorMsg, MB_ICONSTOP );
 			}
@@ -265,7 +267,7 @@ void CTCSys::QSSysInit()
 			IR.cameraProperty.onOff = true;
 			IR.cameraProperty.valueA = GAIN_VALUE_A;
 			IR.cameraProperty.valueB = GAIN_VALUE_B;
-			if(IR.pgrCamera[i]->SetProperty(&IR.cameraProperty, false) != PGRERROR_OK){	
+			if(IR.pgrCamera[i]->SetProperty(&IR.cameraProperty, false) != PGRERROR_OK){
 				sprintf_s(ErrorMsg, "Gain Failure: %s", IR.PGRError.GetDescription());
 				AfxMessageBox(CA2W(ErrorMsg), MB_ICONSTOP);
 			}
@@ -275,7 +277,7 @@ void CTCSys::QSSysInit()
 			IR.cameraTrigger.polarity = 0;
 			IR.cameraTrigger.source = 0;
 			IR.cameraTrigger.parameter = 0;
-			if(IR.pgrCamera[i]->SetTriggerMode(&IR.cameraTrigger, false) != PGRERROR_OK){	
+			if(IR.pgrCamera[i]->SetTriggerMode(&IR.cameraTrigger, false) != PGRERROR_OK){
 				sprintf_s(ErrorMsg, "Trigger Failure: %s", IR.PGRError.GetDescription());
 				AfxMessageBox(CA2W(ErrorMsg), MB_ICONSTOP);
 			}
@@ -305,23 +307,23 @@ void CTCSys::QSSysInit()
 		IR.AcqBuf[i].create(IR.DigSizeY, IR.DigSizeX, CV_8UC3);
 		IR.DispBuf[i].create(IR.DigSizeY, IR.DigSizeX, CV_8UC3);
 		IR.ProcBuf[i].create(IR.DigSizeY, IR.DigSizeX, CV_8UC3);
-		for (j=0; j<MAX_BUFFER; j++) 
+		for (j=0; j<MAX_BUFFER; j++)
 			IR.SaveBuf[i][j].create(IR.DigSizeY, IR.DigSizeX, CV_8UC3);
 #else
 		IR.AcqBuf[i].create(IR.DigSizeY, IR.DigSizeX, CV_8UC1);
 		IR.DispBuf[i].create(IR.DigSizeY, IR.DigSizeX, CV_8UC1);
 		IR.ProcBuf[i].create(IR.DigSizeY, IR.DigSizeX, CV_8UC1);
-		for (j=0; j<MAX_BUFFER; j++) 
+		for (j=0; j<MAX_BUFFER; j++)
 			IR.SaveBuf[i][j].create(IR.DigSizeY, IR.DigSizeX, CV_8UC1);
 #endif
 		IR.AcqPtr[i] = IR.AcqBuf[i].data;
-		IR.DispROI[i] = IR.DispBuf[i](R); 
-		IR.ProcROI[i] = IR.ProcBuf[i](R); 
+		IR.DispROI[i] = IR.DispBuf[i](R);
+		IR.ProcROI[i] = IR.ProcBuf[i](R);
 
 		IR.OutBuf1[i].create(IR.DigSizeY, IR.DigSizeX, CV_8UC1);
 		IR.OutBuf2[i].create(IR.DigSizeY, IR.DigSizeX, CV_8UC1);
-		IR.OutROI1[i] = IR.OutBuf1[i](R); 
-		IR.OutROI2[i] = IR.OutBuf2[i](R); 
+		IR.OutROI1[i] = IR.OutBuf1[i](R);
+		IR.OutROI2[i] = IR.OutBuf2[i](R);
 		IR.DispBuf[i] = Scalar(0);
 		IR.ProcBuf[i] = Scalar(0);
 	}
@@ -360,7 +362,7 @@ void CTCSys::initBitmapStruct(long iCols, long iRows)
     m_bitmapInfo.bmiHeader.biWidth			= iCols;
     m_bitmapInfo.bmiHeader.biHeight			= -iRows;
     m_bitmapInfo.bmiHeader.biBitCount		= 24;
-	m_bitmapInfo.bmiHeader.biSizeImage = 
+	m_bitmapInfo.bmiHeader.biSizeImage =
       m_bitmapInfo.bmiHeader.biWidth * m_bitmapInfo.bmiHeader.biHeight * (m_bitmapInfo.bmiHeader.biBitCount / 8 );
 }
 
