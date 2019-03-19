@@ -1,9 +1,10 @@
 #include "tracker.h"
 
-Tracker::Tracker(cv::Mat imgL, cv::Mat imgR)
+Tracker::Tracker(cv::Mat imgL, cv::Mat imgR, cv::Rect roi)
 {
   imgL.copyTo(_backgroundL);
   imgR.copyTo(_backgroundR);
+  _roi = roi;
 
   cv::cvtColor(_backgroundL, _backgroundL, cv::COLOR_BGR2GRAY);
   cv::cvtColor(_backgroundR, _backgroundR, cv::COLOR_BGR2GRAY);
