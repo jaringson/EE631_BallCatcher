@@ -1,5 +1,7 @@
 #include "tracker.h"
 
+#include <string>
+
 Tracker::Tracker(cv::Mat imgL, cv::Mat imgR, cv::Rect roiL, cv::Rect roiR)
 {
   imgL.copyTo(_backgroundL);
@@ -9,6 +11,22 @@ Tracker::Tracker(cv::Mat imgL, cv::Mat imgR, cv::Rect roiL, cv::Rect roiR)
 
   cv::cvtColor(_backgroundL, _backgroundL, cv::COLOR_BGR2GRAY);
   cv::cvtColor(_backgroundR, _backgroundR, cv::COLOR_BGR2GRAY);
+
+  std::string filename{"../stereo_params.yaml"};
+  cv::FileStorage fin(filename, cv::FileStorage::READ);
+  fin["Camera_MatrixL"] >> _camera_matL;
+  fin["Distortion_ParamsL"] >> _dst_coeffL;
+  fin["Camera_MatrixR"] >> _camera_matR;
+  fin["Distortion_ParamsR"] >> _dst_coeffL;
+  fin["R"] >> _R;
+  fin["T"] >> _T;
+  fin["E"] >> _E;
+  fin["F"] >> _F;
+  fin["R1"] >> _R1;
+  fin["R2"] >> _R2;
+  fin["P1"] >> _P1;
+  fin["P2"] >> _P2;
+  fin["Q"] >> _Q;
 }
 
 void Tracker::setImages(cv::Mat imgL, cv::Mat imgR)
@@ -38,8 +56,8 @@ void Tracker::calcBallPosition()
     std::vector<cv::Point2f> outputL, outputR;
     std::vector<cv::Point2f> ptsL{centerL};
     std::vector<cv::Point2f> ptsR{centerR};
-    // cv::undistortPoints(ptsL, outputL, camera_matL, dst_coeffL, R1, P1); //Need to get file for R,P,Q
-    // cv::undistortPoints(ptsR, outputR, camera_matR, dst_coeffR, R2, P2);
+    cv::undistortPoints(ptsL, outputL, _camera_matL, _dst_coeffL, _R1, _P1);
+    cv::undistortPoints(ptsR, outputR, _camera_matR, _dst_coeffR, _R2, _P2);
 
     std::vector<cv::Point3f> pts = doPerspectiveTransform(outputL, outputR);
 
@@ -73,7 +91,7 @@ std::vector<cv::Point3f> Tracker::doPerspectiveTransform(std::vector<cv::Point2f
   perspL.push_back(cv::Point3f(ptsL[0].x, ptsL[0].y, ptsL[0].x - ptsR[0].x));
 
   //This spits out the coordinates in the left camera frame
-  // cv::perspectiveTransform(perspL, finalL, Q); //Get Q
+  cv::perspectiveTransform(perspL, final, _Q); //Get Q
 
   return final;
 }
