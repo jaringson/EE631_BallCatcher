@@ -42,6 +42,12 @@ void Tracker::calcBallPosition()
     // cv::undistortPoints(ptsR, outputR, camera_matR, dst_coeffR, R2, P2);
 
     std::vector<cv::Point3f> pts = doPerspectiveTransform(outputL, outputR);
+
+    pts[0].x -= 10.135; //Put into the center of the catchers frame. Need to flip x still
+    pts[0].y -= 29.0;
+    pts[0].z -= 21.0;
+
+    //Add pts to the A matrix
   }
 }
 
@@ -62,6 +68,12 @@ cv::Point2f Tracker::calcMoment(cv::Mat img, cv::Mat background)
 std::vector<cv::Point3f> Tracker::doPerspectiveTransform(std::vector<cv::Point2f> ptsL, std::vector<cv::Point2f> ptsR)
 {
   std::vector<cv::Point3f> final;
+
+  std::vector<cv::Point3f> perspL;
+  perspL.push_back(cv::Point3f(ptsL[0].x, ptsL[0].y, ptsL[0].x - ptsR[0].x));
+
+  //This spits out the coordinates in the left camera frame
+  // cv::perspectiveTransform(perspL, finalL, Q); //Get Q
 
   return final;
 }
