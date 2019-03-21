@@ -1,10 +1,11 @@
 #include "tracker.h"
 
-Tracker::Tracker(cv::Mat imgL, cv::Mat imgR, cv::Rect roi)
+Tracker::Tracker(cv::Mat imgL, cv::Mat imgR, cv::Rect roiL, cv::Rect roiR)
 {
   imgL.copyTo(_backgroundL);
   imgR.copyTo(_backgroundR);
-  _roi = roi;
+  _roiL = roiL;
+  _roiR = roiR;
 
   cv::cvtColor(_backgroundL, _backgroundL, cv::COLOR_BGR2GRAY);
   cv::cvtColor(_backgroundR, _backgroundR, cv::COLOR_BGR2GRAY);
@@ -12,20 +13,41 @@ Tracker::Tracker(cv::Mat imgL, cv::Mat imgR, cv::Rect roi)
 
 void Tracker::setImages(cv::Mat imgL, cv::Mat imgR)
 {
-  imgL.copyTo(_imgL);
-  imgR.copyTo(_imgR);
+  cv::cvtColor(imgL, _imgL, cv::COLOR_BGR2GRAY);
+  cv::cvtColor(imgR, _imgR, cv::COLOR_BGR2GRAY);
 }
 
-void Tracker::calcFinalPosition()
+void Tracker::calcCatcherPosition()
+{
+
+}
+
+void Tracker::calcBallPosition()
 {
   cv::Point2f centerL{calcMoment(_imgL, _backgroundL)};
   cv::Point2f centerR{calcMoment(_imgR, _backgroundR)};
+
+  //reset ROI's in else statement
+  if(centerL.x == 0 && centerL.y == 0 && centerR.x == 0 && centerR.y == 0) //assumes ball has a moment at 0, 0
+  {
+    centerL.x += _roiL.x;
+    centerL.y += _roiL.y;
+    centerR.x += _roiR.x;
+    centerR.y += _roiR.y;
+
+    std::vector<cv::Point2f> outputL, outputR;
+    std::vector<cv::Point2f> ptsL{centerL};
+    std::vector<cv::Point2f> ptsR{centerR};
+    // cv::undistortPoints(ptsL, outputL, camera_matL, dst_coeffL, R1, P1); //Need to get file for R,P,Q
+    // cv::undistortPoints(ptsR, outputR, camera_matR, dst_coeffR, R2, P2);
+
+    std::vector<cv::Point3f> pts = doPerspectiveTransform(outputL, outputR);
+  }
 }
 
 cv::Point2f Tracker::calcMoment(cv::Mat img, cv::Mat background)
 {
   cv::Mat g_img;
-  cv::cvtColor(img, g_img, cv::COLOR_BGR2GRAY);
 
   g_img = absoluteDifference(g_img, background);
   g_img = computeThreshold(g_img, 20);
@@ -35,6 +57,13 @@ cv::Point2f Tracker::calcMoment(cv::Mat img, cv::Mat background)
   cv::Point2f center{m.m10/m.m00, m.m01/m.m00};
 
   return center;
+}
+
+std::vector<cv::Point3f> Tracker::doPerspectiveTransform(std::vector<cv::Point2f> ptsL, std::vector<cv::Point2f> ptsR)
+{
+  std::vector<cv::Point3f> final;
+
+  return final;
 }
 
 cv::Mat Tracker::absoluteDifference(cv::Mat gray_frame, cv::Mat prev_frame)
