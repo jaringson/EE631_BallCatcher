@@ -49,6 +49,11 @@ cv::Point2f Tracker::calcCatcherPosition()
   //I think we want to solve with colPivHouseholderQR (more accurate) or HouseholderQR (faster)
   x = A.colPivHouseholderQr().solve(bx);
   y = A.colPivHouseholderQr().solve(by);
+
+  // Eigen::RowVector3d pt; //Don't need to do matrix multiply. Just need last value in x and y
+  // pt << 0.0, 0.0, 1;
+  cv::Point2f pt{x(2), y(2)};
+  return pt;
 }
 
 void Tracker::calcBallPosition()
