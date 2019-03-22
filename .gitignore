@@ -1,2 +1,4 @@
 build*
 *.bmp
+CMakeLists.txt.user
+

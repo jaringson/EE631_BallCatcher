@@ -24,7 +24,7 @@ private:
   std::vector<cv::Point3f> doPerspectiveTransform(std::vector<cv::Point2f> ptsL, std::vector<cv::Point2f> ptsR);
   void resetROI();
 
-  int roiL_init_x{325}, roiL_init_y{50}, roiR_init_x{225}, roiR_init_y{50}, roi_init_w{40}, roi_init_h{40};
+  int roiL_init_x{345}, roiL_init_y{85}, roiR_init_x{265}, roiR_init_y{85}, roi_init_w{50}, roi_init_h{40};
   cv::Mat _backgroundL, _backgroundR;
   cv::Mat _imgL, _imgR;
   cv::Rect _roiL, _roiR;
