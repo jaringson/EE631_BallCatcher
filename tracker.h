@@ -29,6 +29,7 @@ private:
   cv::Mat _camera_matL, _camera_matR, _dst_coeffL, _dst_coeffR;
   cv::Mat _R, _T, _E, _F;
   cv::Mat _R1, _R2, _P1, _P2, _Q;
+  Eigen::Matrix<double, Eigen::Dynamic, 3> _pts;
 
 };
 

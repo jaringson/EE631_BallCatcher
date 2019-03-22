@@ -4,6 +4,7 @@
 
 Tracker::Tracker(cv::Mat imgL, cv::Mat imgR, cv::Rect roiL, cv::Rect roiR)
 {
+  //could hardcode the roi's instead of passing in
   imgL.copyTo(_backgroundL);
   imgR.copyTo(_backgroundR);
   _roiL = roiL;
@@ -69,6 +70,10 @@ void Tracker::calcBallPosition()
     pts[0].z -= 21.0;
 
     //Add pts to the A matrix
+    _pts.conservativeResize(_pts.rows() + 1, _pts.cols());
+    _pts.row(_pts.rows() - 1) = Eigen::RowVector3d(pts[0].x, pts[0].y, pts[0].z);
+    // mat.conservativeResize(mat.rows(), mat.cols()+1);
+    // mat.col(mat.cols()-1) = vec;
   }
 }
 
