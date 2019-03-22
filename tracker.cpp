@@ -28,6 +28,8 @@ Tracker::Tracker(cv::Mat imgL, cv::Mat imgR)
   fin["P1"] >> _P1;
   fin["P2"] >> _P2;
   fin["Q"] >> _Q;
+
+  _counter = 0;
 }
 
 void Tracker::setImages(cv::Mat imgL, cv::Mat imgR)
@@ -57,7 +59,7 @@ cv::Point2f Tracker::calcCatcherPosition()
   return pt;
 }
 
-void Tracker::calcBallPosition()
+bool Tracker::calcBallPosition()
 {
   cv::Point2f centerL{calcMoment(_imgL(_roiL), _backgroundL(_roiL))};
   cv::Point2f centerR{calcMoment(_imgR(_roiR), _backgroundR(_roiR))};
@@ -65,9 +67,11 @@ void Tracker::calcBallPosition()
   if(centerL.x == 0 && centerL.y == 0 && centerR.x == 0 && centerR.y == 0)
   {
       resetROI();
+      _counter = 0;
   }
   else
   {
+    _counter++;
     centerL.x += _roiL.x;
     centerL.y += _roiL.y;
     centerR.x += _roiR.x;
@@ -103,15 +107,21 @@ void Tracker::calcBallPosition()
     _pts.row(_pts.rows() - 1) = Eigen::RowVector3d(pts[0].x, pts[0].y, pts[0].z);
 
     // TODO test roi update
-    _roiL.x = (int(centerL.x) - 25 < 0) ? int(centerL.x) - 25 : 0;
-    _roiL.y = (int(centerL.y) - 20 < 0) ? int(centerL.y) - 20 : 0;
+    //It currently throws an out of bounds error b/c roi extends past end of img (after)
+    //Check if it saturates
+    _roiL.x = (int(centerL.x) - 25 < 0) ? 0 : int(centerL.x) - 25;
+    _roiL.y = (int(centerL.y) - 20 < 0) ? 0 : int(centerL.y) - 20;
     _roiL.width += 1;
     _roiL.height += 2;
-    _roiR.x = (int(centerR.x - _roiR.width/2.0) < 0) ? int(centerR.x - _roiR.width/2.0) : 0;
-    _roiR.y = (int(centerR.y) - 20 < 0) ? int(centerR.y) - 20 : 0;
+    _roiR.x = (int(centerR.x - _roiR.width/2.0) < 0) ? 0 : int(centerR.x - _roiR.width/2.0);
+    _roiR.y = (int(centerR.y) - 20 < 0) ? 0 : int(centerR.y) - 20;
     _roiR.width += 1;
     _roiR.height += 2;
+
+    if(_counter % 15)
+      return true;
   }
+  return false;
 }
 
 cv::Point2f Tracker::calcMoment(cv::Mat g_img, cv::Mat background)

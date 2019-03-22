@@ -25,6 +25,13 @@ int main()
 
     imgL = cv::imread(filenameL + file_num + file_ext);
     imgR = cv::imread(filenameR + file_num + file_ext);
+    tracker.setImages(imgL, imgR);
+    bool calc_catcher = tracker.calcBallPosition();
+
+    if(calc_catcher)
+    {
+      cv::Point2f pos = tracker.calcCatcherPosition();
+    }
   }
 
   return 0;

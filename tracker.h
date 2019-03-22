@@ -14,7 +14,7 @@ public:
   Tracker(cv::Mat imgL, cv::Mat imgR);
   void setImages(cv::Mat imgL, cv::Mat imgR);
   cv::Point2f calcCatcherPosition();
-  void calcBallPosition();
+  bool calcBallPosition();
 
 private:
   cv::Point2f calcMoment(cv::Mat img, cv::Mat background);
@@ -32,6 +32,7 @@ private:
   cv::Mat _R, _T, _E, _F;
   cv::Mat _R1, _R2, _P1, _P2, _Q;
   Eigen::Matrix<double, Eigen::Dynamic, 3> _pts;
+  int _counter;
 
 };
 
