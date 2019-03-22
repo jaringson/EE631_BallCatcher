@@ -42,11 +42,14 @@ void Tracker::calcCatcherPosition()
 
 void Tracker::calcBallPosition()
 {
-  cv::Point2f centerL{calcMoment(_imgL, _backgroundL)};
-  cv::Point2f centerR{calcMoment(_imgR, _backgroundR)};
+  cv::Point2f centerL{calcMoment(_imgL(_roiL), _backgroundL(_roiL))};
+  cv::Point2f centerR{calcMoment(_imgR(_roiR), _backgroundR(_roiR))};
 
-  //reset ROI's in else statement
-  if(centerL.x == 0 && centerL.y == 0 && centerR.x == 0 && centerR.y == 0) //assumes ball has a moment at 0, 0
+  if(centerL.x == 0 && centerL.y == 0 && centerR.x == 0 && centerR.y == 0)
+  {
+      //Reset roi to monitor baseball thrower
+  }
+  else
   {
     centerL.x += _roiL.x;
     centerL.y += _roiL.y;
