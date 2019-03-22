@@ -124,6 +124,7 @@ long QSProcessThreadFunc(CTCSys *QS)
 			// Images are acquired into ProcBuf[0] for left and ProcBuf[1] for right camera
 			// Need to create child image or small region of interest for processing to exclude background and speed up processing
 			// Mat child = QS->IR.ProcBuf[i](Rect(x, y, width, height));
+			Mat leftChild, rightChild;
 			for(i=0; i < QS->IR.NumCameras; i++) {
 #ifdef PTG_COLOR
 				cvtColor(QS->IR.ProcBuf[i][BufID], QS->IR.OutBuf1[i], CV_RGB2GRAY, 0);
@@ -132,11 +133,26 @@ long QSProcessThreadFunc(CTCSys *QS)
 #endif
 				// TODO remove the Canny function above and add your ball detection and trajectory estimation code here
 				// calculate your estimated ball x, y location in inches and assigned them to moveX, and moveY below
+				if(i==0)
+					leftChild = QS->IR.ProcBuf[i]; //(Rect(x, y, width, height));
+				else
+					rightChild = QS->IR.ProcBuf[i]; //(Rect(x, y, width, height));
 			}
+
+			tracker.setImages(leftChild, rightChild);
+	    bool calc_catcher = tracker.calcBallPosition();
+
+	    if(calc_catcher)
+	    {
+	      cv::Point2f pos = tracker.calcCatcherPosition();
+				QS->Move_X = pos.x;					// replace 0 with your x coordinate
+				QS->Move_Y = pos.y;					// replace 0 with your y coordinate
+				SetEvent(QS->QSMoveEvent);		// Signal the move event to move catcher. The event will be reset in the move thread.
+	    }
 			// This is how you move the catcher.  QS->moveX and QS->moveY (both in inches) must be calculated and set first.
-			QS->Move_X = 0;					// replace 0 with your x coordinate
-			QS->Move_Y = 0;					// replace 0 with your y coordinate
-			SetEvent(QS->QSMoveEvent);		// Signal the move event to move catcher. The event will be reset in the move thread.
+			// QS->Move_X = 0;					// replace 0 with your x coordinate
+			// QS->Move_Y = 0;					// replace 0 with your y coordinate
+			// SetEvent(QS->QSMoveEvent);		// Signal the move event to move catcher. The event will be reset in the move thread.
 		}
 		// Display Image
 		if (QS->IR.UpdateImage) {

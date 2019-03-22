@@ -41,10 +41,11 @@ void Tracker::setImages(cv::Mat imgL, cv::Mat imgR)
 cv::Point2f Tracker::calcCatcherPosition()
 {
   Eigen::VectorXd bx = _pts.col(0);
-  Eigen::VectorXd by = _pts.col(1);
+  Eigen::VectorXd by = -_pts.col(1);
 
   Eigen::Matrix<double, Eigen::Dynamic, 3> A;
-  A.col(0) = _pts.col(2);
+  A = Eigen::MatrixXd::Zero(_pts.rows(),3);
+  A.col(0) = _pts.col(2).cwiseProduct(_pts.col(2));
   A.col(1) = _pts.col(2);
   A.col(2) = Eigen::VectorXd::Constant(_pts.rows(), 1);
 
@@ -52,6 +53,10 @@ cv::Point2f Tracker::calcCatcherPosition()
   //I think we want to solve with colPivHouseholderQR (more accurate) or HouseholderQR (faster)
   x = A.colPivHouseholderQr().solve(bx);
   y = A.colPivHouseholderQr().solve(by);
+
+
+  std::cout << "X: " << x << "\n";
+  std::cout << "Y: " << y << "\n";
 
   // Eigen::RowVector3d pt; //Don't need to do matrix multiply. Just need last value in x and y
   // pt << 0.0, 0.0, 1;
@@ -109,16 +114,19 @@ bool Tracker::calcBallPosition()
     // TODO test roi update
     //It currently throws an out of bounds error b/c roi extends past end of img (after)
     //Check if it saturates
-    _roiL.x = (int(centerL.x) - 25 < 0) ? 0 : int(centerL.x) - 25;
-    _roiL.y = (int(centerL.y) - 20 < 0) ? 0 : int(centerL.y) - 20;
-    _roiL.width += 1;
-    _roiL.height += 2;
-    _roiR.x = (int(centerR.x - _roiR.width/2.0) < 0) ? 0 : int(centerR.x - _roiR.width/2.0);
-    _roiR.y = (int(centerR.y) - 20 < 0) ? 0 : int(centerR.y) - 20;
-    _roiR.width += 1;
-    _roiR.height += 2;
+    if(_counter<=30)
+    {
+      _roiL.x = (floor(centerL.x) - 25 < 0) ? 0 : int(centerL.x) - 25;
+      _roiL.y = (floor(centerL.y) - 20 < 0) ? 0 : int(centerL.y) - 20;
+      _roiL.width += 1;
+      _roiL.height += 2;
+      _roiR.x = (floor(centerR.x - _roiR.width/2.0) < 0) ? 0 : int(centerR.x - _roiR.width/2.0);
+      _roiR.y = (floor(centerR.y) - 20 < 0) ? 0 : int(centerR.y) - 20;
+      _roiR.width += 1;
+      _roiR.height += 2;
+    }
 
-    if(_counter % 15)
+    if(_counter % 15 == 0)
       return true;
   }
   return false;
