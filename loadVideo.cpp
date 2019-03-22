@@ -15,5 +15,17 @@ int main()
 
   Tracker tracker(imgL, imgR);
 
+  for(int i(0); i < 100; i++)
+  {
+    std::string file_num;
+    if(i < 10)
+      file_num = "0" + std::to_string(i);
+    else
+      file_num = std::to_string(i);
+
+    imgL = cv::imread(filenameL + file_num + file_ext);
+    imgR = cv::imread(filenameR + file_num + file_ext);
+  }
+
   return 0;
 }
