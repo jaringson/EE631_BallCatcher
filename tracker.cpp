@@ -35,9 +35,20 @@ void Tracker::setImages(cv::Mat imgL, cv::Mat imgR)
   cv::cvtColor(imgR, _imgR, cv::COLOR_BGR2GRAY);
 }
 
-void Tracker::calcCatcherPosition()
+cv::Point2f Tracker::calcCatcherPosition()
 {
-  //Need to negate the x value at the end of this function to be in the catcher frame
+  Eigen::VectorXd bx = _pts.col(0);
+  Eigen::VectorXd by = _pts.col(1);
+
+  Eigen::Matrix<double, Eigen::Dynamic, 3> A;
+  A.col(0) = _pts.col(2);
+  A.col(1) = _pts.col(2);
+  A.col(2) = Eigen::VectorXd::Constant(_pts.rows(), 1);
+
+  Eigen::Vector3d x, y;
+  //I think we want to solve with colPivHouseholderQR (more accurate) or HouseholderQR (faster)
+  x = A.colPivHouseholderQr().solve(bx);
+  y = A.colPivHouseholderQr().solve(by);
 }
 
 void Tracker::calcBallPosition()
@@ -64,13 +75,15 @@ void Tracker::calcBallPosition()
 
     std::vector<cv::Point3f> pts = doPerspectiveTransform(outputL, outputR);
 
-    pts[0].x -= 10.135; //Put into the center of the catchers frame. Need to flip x still
+    pts[0].x -= 10.135; //Put into the center of the catchers frame.
     pts[0].y -= 29.0;
     pts[0].z -= 21.0;
 
     //Add pts to the A matrix
     _pts.conservativeResize(_pts.rows() + 1, _pts.cols());
     _pts.row(_pts.rows() - 1) = Eigen::RowVector3d(pts[0].x, pts[0].y, pts[0].z);
+
+    //update roi
   }
 }
 

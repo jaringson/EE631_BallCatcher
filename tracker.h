@@ -13,7 +13,7 @@ public:
 
   Tracker(cv::Mat imgL, cv::Mat imgR);
   void setImages(cv::Mat imgL, cv::Mat imgR);
-  void calcCatcherPosition();
+  cv::Point2f calcCatcherPosition();
   void calcBallPosition();
 
 private:
