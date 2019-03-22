@@ -79,8 +79,8 @@ void Tracker::calcBallPosition()
   _imgR(_roiR).copyTo(cropR);
   cv::cvtColor(cropL, cropL, cv::COLOR_GRAY2BGR);
   cv::cvtColor(cropR, cropR, cv::COLOR_GRAY2BGR);
-
-
+  cv::circle(cropL,cv::Point2f{centerL.x-_roiL.x,centerL.y-_roiL.y},5,cv::Scalar{0,0,255});
+  cv::circle(cropR,cv::Point2f{centerR.x-_roiR.x,centerR.y-_roiR.y},5,cv::Scalar{0,0,255});
   cv::imshow("Left Crop", cropL);
   cv::imshow("Right Crop", cropR);
   cv::waitKey(0);
