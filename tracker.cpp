@@ -52,7 +52,7 @@ cv::Point2f Tracker::calcCatcherPosition()
 
   // Eigen::RowVector3d pt; //Don't need to do matrix multiply. Just need last value in x and y
   // pt << 0.0, 0.0, 1;
-  cv::Point2f pt{x(2), y(2)};
+  cv::Point2f pt{-x(2), y(2)}; //Negative sign to put in catcher frame
   return pt;
 }
 
@@ -80,7 +80,7 @@ void Tracker::calcBallPosition()
 
     std::vector<cv::Point3f> pts = doPerspectiveTransform(outputL, outputR);
 
-    pts[0].x -= 10.135; //Put into the center of the catchers frame.
+    pts[0].x -= 10.135; //Put into the center of the catchers frame. Maybe measure again
     pts[0].y -= 29.0;
     pts[0].z -= 21.0;
 
@@ -88,7 +88,7 @@ void Tracker::calcBallPosition()
     _pts.conservativeResize(_pts.rows() + 1, _pts.cols());
     _pts.row(_pts.rows() - 1) = Eigen::RowVector3d(pts[0].x, pts[0].y, pts[0].z);
 
-    //update roi
+    // TODO update roi
   }
 }
 
