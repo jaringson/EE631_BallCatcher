@@ -1,6 +1,7 @@
 #include "tracker.h"
-
 #include <string>
+
+#define DEBUG
 
 Tracker::Tracker(cv::Mat imgL, cv::Mat imgR)
 {
@@ -72,6 +73,19 @@ void Tracker::calcBallPosition()
     centerR.x += _roiR.x;
     centerR.y += _roiR.y;
 
+#ifdef DEBUG
+  cv::Mat cropL, cropR;
+  _imgL(_roiL).copyTo(cropL);
+  _imgR(_roiR).copyTo(cropR);
+  cv::cvtColor(cropL, cropL, cv::COLOR_GRAY2BGR);
+  cv::cvtColor(cropR, cropR, cv::COLOR_GRAY2BGR);
+
+
+  cv::imshow("Left Crop", cropL);
+  cv::imshow("Right Crop", cropR);
+  cv::waitKey(0);
+#endif
+
     std::vector<cv::Point2f> outputL, outputR;
     std::vector<cv::Point2f> ptsL{centerL};
     std::vector<cv::Point2f> ptsR{centerR};
@@ -88,20 +102,30 @@ void Tracker::calcBallPosition()
     _pts.conservativeResize(_pts.rows() + 1, _pts.cols());
     _pts.row(_pts.rows() - 1) = Eigen::RowVector3d(pts[0].x, pts[0].y, pts[0].z);
 
-    // TODO update roi
+    // TODO test roi update
+    _roiL.x = (int(centerL.x) - 25 < 0) ? int(centerL.x) - 25 : 0;
+    _roiL.y = (int(centerL.y) - 20 < 0) ? int(centerL.y) - 20 : 0;
+    _roiL.width += 1;
+    _roiL.height += 2;
+    _roiR.x = (int(centerR.x - _roiR.width/2.0) < 0) ? int(centerR.x - _roiR.width/2.0) : 0;
+    _roiR.y = (int(centerR.y) - 20 < 0) ? int(centerR.y) - 20 : 0;
+    _roiR.width += 1;
+    _roiR.height += 2;
   }
 }
 
-cv::Point2f Tracker::calcMoment(cv::Mat img, cv::Mat background)
+cv::Point2f Tracker::calcMoment(cv::Mat g_img, cv::Mat background)
 {
-  cv::Mat g_img;
-
   g_img = absoluteDifference(g_img, background);
   g_img = computeThreshold(g_img, 20);
   g_img = cleanUpNoise(g_img);
 
   cv::Moments m{cv::moments(g_img, true)};
-  cv::Point2f center{m.m10/m.m00, m.m01/m.m00};
+  cv::Point2f center;
+  if (m.m00 != 0.0)
+    center = cv::Point2f{m.m10/m.m00, m.m01/m.m00};
+  else
+    center = cv::Point2f{0,0};
 
   return center;
 }
