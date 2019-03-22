@@ -2,13 +2,12 @@
 
 #include <string>
 
-Tracker::Tracker(cv::Mat imgL, cv::Mat imgR, cv::Rect roiL, cv::Rect roiR)
+Tracker::Tracker(cv::Mat imgL, cv::Mat imgR)
 {
   //could hardcode the roi's instead of passing in
   imgL.copyTo(_backgroundL);
   imgR.copyTo(_backgroundR);
-  _roiL = roiL;
-  _roiR = roiR;
+  resetROI();
 
   cv::cvtColor(_backgroundL, _backgroundL, cv::COLOR_BGR2GRAY);
   cv::cvtColor(_backgroundR, _backgroundR, cv::COLOR_BGR2GRAY);
@@ -38,7 +37,7 @@ void Tracker::setImages(cv::Mat imgL, cv::Mat imgR)
 
 void Tracker::calcCatcherPosition()
 {
-
+  //Need to negate the x value at the end of this function to be in the catcher frame
 }
 
 void Tracker::calcBallPosition()
@@ -48,7 +47,7 @@ void Tracker::calcBallPosition()
 
   if(centerL.x == 0 && centerL.y == 0 && centerR.x == 0 && centerR.y == 0)
   {
-      //Reset roi to monitor baseball thrower
+      resetROI();
   }
   else
   {
@@ -72,8 +71,6 @@ void Tracker::calcBallPosition()
     //Add pts to the A matrix
     _pts.conservativeResize(_pts.rows() + 1, _pts.cols());
     _pts.row(_pts.rows() - 1) = Eigen::RowVector3d(pts[0].x, pts[0].y, pts[0].z);
-    // mat.conservativeResize(mat.rows(), mat.cols()+1);
-    // mat.col(mat.cols()-1) = vec;
   }
 }
 
@@ -99,7 +96,7 @@ std::vector<cv::Point3f> Tracker::doPerspectiveTransform(std::vector<cv::Point2f
   perspL.push_back(cv::Point3f(ptsL[0].x, ptsL[0].y, ptsL[0].x - ptsR[0].x));
 
   //This spits out the coordinates in the left camera frame
-  cv::perspectiveTransform(perspL, final, _Q); //Get Q
+  cv::perspectiveTransform(perspL, final, _Q);
 
   return final;
 }
@@ -129,4 +126,17 @@ cv::Mat Tracker::cleanUpNoise(cv::Mat noisy_img)
   cv::dilate(img, img, element);
 
   return img;
+}
+
+void Tracker::resetROI()
+{
+  _roiL.x = roiL_init_x;
+  _roiL.y = roiL_init_y;
+  _roiL.width = roi_init_w;
+  _roiL.height = roi_init_h;
+
+  _roiR.x = roiR_init_x;
+  _roiR.y = roiR_init_y;
+  _roiR.width = roi_init_w;
+  _roiR.height = roi_init_h;
 }

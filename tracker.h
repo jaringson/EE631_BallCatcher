@@ -11,7 +11,7 @@ class Tracker
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  Tracker(cv::Mat imgL, cv::Mat imgR, cv::Rect roiL, cv::Rect roiR);
+  Tracker(cv::Mat imgL, cv::Mat imgR);
   void setImages(cv::Mat imgL, cv::Mat imgR);
   void calcCatcherPosition();
   void calcBallPosition();
@@ -22,7 +22,9 @@ private:
   cv::Mat computeThreshold(cv::Mat gray_frame, int thresh);
   cv::Mat cleanUpNoise(cv::Mat noisy_img);
   std::vector<cv::Point3f> doPerspectiveTransform(std::vector<cv::Point2f> ptsL, std::vector<cv::Point2f> ptsR);
+  void resetROI();
 
+  int roiL_init_x{325}, roiL_init_y{50}, roiR_init_x{225}, roiR_init_y{50}, roi_init_w{40}, roi_init_h{40};
   cv::Mat _backgroundL, _backgroundR;
   cv::Mat _imgL, _imgR;
   cv::Rect _roiL, _roiR;
