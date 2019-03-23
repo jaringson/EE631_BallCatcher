@@ -10,6 +10,14 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include <vector>
 
+#define DEBUG
+#define VIDEO
+#define WRITE_OUT
+
+#ifdef WRITE_OUT
+#include <fstream>
+#endif
+
 class Tracker
 {
 public:
@@ -17,6 +25,7 @@ public:
 
   Tracker();
   Tracker(cv::Mat imgL, cv::Mat imgR);
+  ~Tracker();
   void setImages(cv::Mat imgL, cv::Mat imgR);
   cv::Point2f calcCatcherPosition();
   bool calcBallPosition();
@@ -42,7 +51,9 @@ private:
   Eigen::Matrix<double, Eigen::Dynamic, 3> _pts;
   int _counter;
   int _back_count;
-
+#ifdef WRITE_OUT
+  std::ofstream out_file_;
+#endif
 };
 
 #endif

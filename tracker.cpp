@@ -2,9 +2,6 @@
 #include <string>
 #include <iostream>
 
-#define DEBUG
-#define VIDEO
-
 Tracker::Tracker()
 {
     resetROI();
@@ -57,6 +54,17 @@ Tracker::Tracker(cv::Mat imgL, cv::Mat imgR)
 
   _counter = 0;
   _back_count = 200;
+
+#ifdef WRITE_OUT
+    out_file_.open("pos_data.txt");
+#endif
+}
+
+Tracker::~Tracker()
+{
+#ifdef WRITE_OUT
+    out_file_.close();
+#endif
 }
 
 void Tracker::setImages(cv::Mat imgL, cv::Mat imgR)
@@ -159,13 +167,14 @@ bool Tracker::calcBallPosition()
             pts[0].y -= float(30.0);
             pts[0].z -= 21.5f;
 
+#ifdef WRITE_OUT
+            out_file_ << pts[0].x << "\t" << pts[0].y << "\t" << pts[0].z << "\t\n";
+#endif
+
             //Add pts to the A matrix
             _pts.conservativeResize(_pts.rows() + 1, _pts.cols());
             _pts.row(_pts.rows() - 1) = Eigen::RowVector3d(double(pts[0].x), double(pts[0].y), double(pts[0].z));
 
-            // TODO test roi update
-            //It currently throws an out of bounds error b/c roi extends past end of img (after)
-            //Check if it saturates
             if (_counter <= 30)
             {
                 _roiL.x = (int(centerL.x) - 25 < 0) ? 0 : int(centerL.x) - 25;
