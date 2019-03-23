@@ -32,6 +32,7 @@ int main()
     if(calc_catcher)
     {
       cv::Point2f pos = tracker.calcCatcherPosition();
+      std::cout << pos << std::endl;
     }
   }
 
