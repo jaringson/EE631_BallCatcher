@@ -155,9 +155,9 @@ bool Tracker::calcBallPosition()
 
 			std::vector<cv::Point3f> pts = doPerspectiveTransform(outputL, outputR);
 
-			pts[0].x -= float(10.135); //Put into the center of the catchers frame. Maybe measure again
-			pts[0].y -= float(29.0);
-			pts[0].z -= 21.0f;
+            pts[0].x -= float(10.5); //Put into the center of the catchers frame. Maybe measure again
+            pts[0].y -= float(30.0);
+            pts[0].z -= 21.5f;
 
 			//Add pts to the A matrix
 			_pts.conservativeResize(_pts.rows() + 1, _pts.cols());
