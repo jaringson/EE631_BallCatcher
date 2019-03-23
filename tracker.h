@@ -13,7 +13,7 @@
 class Tracker
 {
 public:
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   Tracker();
   Tracker(cv::Mat imgL, cv::Mat imgR);

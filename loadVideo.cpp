@@ -6,7 +6,8 @@
 
 int main()
 {
-  std::string filenameL("../baseball/ballL"), filenameR("../baseball/ballR");
+  std::string folder{"test1/"};
+  std::string filenameL(folder+"L"), filenameR(folder+"R");
   std::string file_ext(".bmp");
 
   cv::Mat imgL, imgR, backgroundL, backgroundR;

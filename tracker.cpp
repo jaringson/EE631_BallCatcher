@@ -91,7 +91,7 @@ void Tracker::setImages(cv::Mat imgL, cv::Mat imgR)
 cv::Point2f Tracker::calcCatcherPosition()
 {
   Eigen::VectorXd bx = _pts.col(0);
-  Eigen::VectorXd by = -_pts.col(1);
+  Eigen::VectorXd by = _pts.col(1);
 
   Eigen::Matrix<double, Eigen::Dynamic, 3> A;
   A = Eigen::MatrixXd::Zero(_pts.rows(),3);
@@ -108,7 +108,7 @@ cv::Point2f Tracker::calcCatcherPosition()
   std::cout << "X: " << x << "\n";
   std::cout << "Y: " << y << "\n";
 
-  cv::Point2f pt{-x(2), y(2)}; //Negative sign to put in catcher frame
+  cv::Point2f pt{float(-x(2)), float(y(2))}; //Negative sign to put in catcher frame
   return pt;
 }
 
@@ -159,20 +159,24 @@ bool Tracker::calcBallPosition()
 
 			//Add pts to the A matrix
 			_pts.conservativeResize(_pts.rows() + 1, _pts.cols());
-			_pts.row(_pts.rows() - 1) = Eigen::RowVector3d(pts[0].x, pts[0].y, pts[0].z);
+            _pts.row(_pts.rows() - 1) = Eigen::RowVector3d(double(pts[0].x), double(pts[0].y), double(pts[0].z));
 
 			// TODO test roi update
 			//It currently throws an out of bounds error b/c roi extends past end of img (after)
 			//Check if it saturates
 			if (_counter <= 30)
 			{
-				_roiL.x = (floor(centerL.x) - 25 < 0) ? 0 : int(centerL.x) - 25;
-				_roiL.y = (floor(centerL.y) - 20 < 0) ? 0 : int(centerL.y) - 20;
-				_roiL.width += 1;
+                _roiL.x = (int(centerL.x) - 25 < 0) ? 0 : int(centerL.x) - 25;
+                _roiL.y = (int(centerL.y) - 20 < 0) ? 0 : int(centerL.y) - 20;
+                _roiL.x = (int(centerL.x) - 25 + _roiL.width > 640) ? 640 : int(centerL.x) - 25 + _roiL.width;
+                _roiL.y = (int(centerL.y) - 20 + _roiL.height > 480) ? 480 : int(centerL.y) - 20 + _roiL.height;
+                _roiL.width += 1;
 				_roiL.height += 2;
-				_roiR.x = (floor(centerR.x - _roiR.width / 2.0) < 0) ? 0 : int(centerR.x - _roiR.width / 2.0);
-				_roiR.y = (floor(centerR.y) - 20 < 0) ? 0 : int(centerR.y) - 20;
-				_roiR.width += 1;
+                _roiR.x = (int(centerR.x) - _roiR.width/2 < 0) ? 0 : int(centerR.x) - _roiR.width/2;
+                _roiR.y = (int(centerR.y) - 20 < 0) ? 0 : int(centerR.y) - 20;
+                _roiR.x = (int(centerR.x) - _roiR.width/2 + _roiR.width > 640) ? 640 : int(centerR.x) - _roiR.width/2 + _roiR.width;
+                _roiR.y = (int(centerR.y) - 20 + _roiR.height > 480) ? 480 : int(centerL.y) - 20 + _roiR.height;
+                _roiR.width += 1;
 				_roiR.height += 2;
 			}
 
@@ -192,7 +196,7 @@ cv::Point2f Tracker::calcMoment(cv::Mat g_img, cv::Mat background)
   cv::Moments m{cv::moments(g_img, true)};
   cv::Point2f center;
   if (m.m00 != 0.0)
-    center = cv::Point2f{m.m10/m.m00, m.m01/m.m00};
+    center = cv::Point2f{float(m.m10/m.m00), float(m.m01/m.m00)};
   else
     center = cv::Point2f{0,0};
 
