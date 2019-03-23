@@ -114,70 +114,73 @@ cv::Point2f Tracker::calcCatcherPosition()
 
 bool Tracker::calcBallPosition()
 {
-  cv::Point2f centerL{calcMoment(_imgL(_roiL), _backgroundL(_roiL))};
-  cv::Point2f centerR{calcMoment(_imgR(_roiR), _backgroundR(_roiR))};
+  if (_back_count > 100)
+	{
+		cv::Point2f centerL{ calcMoment(_imgL(_roiL), _backgroundL(_roiL)) };
+		cv::Point2f centerR{ calcMoment(_imgR(_roiR), _backgroundR(_roiR)) };
 
-  if(centerL.x == 0 && centerL.y == 0 && centerR.x == 0 && centerR.y == 0)
-  {
-      resetROI();
-      _counter = 0;
-  }
-  else
-  {
-    _counter++;
-    centerL.x += _roiL.x;
-    centerL.y += _roiL.y;
-    centerR.x += _roiR.x;
-    centerR.y += _roiR.y;
+		if (centerL.x == 0 && centerL.y == 0 && centerR.x == 0 && centerR.y == 0)
+		{
+			resetROI();
+			_counter = 0;
+		}
+		else
+		{
+			_counter++;
+			centerL.x += _roiL.x;
+			centerL.y += _roiL.y;
+			centerR.x += _roiR.x;
+			centerR.y += _roiR.y;
 
 #ifdef DEBUG
-  cv::Mat cropL, cropR;
-  _imgL(_roiL).copyTo(cropL);
-  _imgR(_roiR).copyTo(cropR);
-  cv::cvtColor(cropL, cropL, cv::COLOR_GRAY2BGR);
-  cv::cvtColor(cropR, cropR, cv::COLOR_GRAY2BGR);
-  cv::circle(cropL,cv::Point2f{centerL.x-_roiL.x,centerL.y-_roiL.y},5,cv::Scalar{0,0,255});
-  cv::circle(cropR,cv::Point2f{centerR.x-_roiR.x,centerR.y-_roiR.y},5,cv::Scalar{0,0,255});
-  cv::imshow("Left Crop", cropL);
-  cv::imshow("Right Crop", cropR);
-  cv::waitKey(0);
+			cv::Mat cropL, cropR;
+			_imgL(_roiL).copyTo(cropL);
+			_imgR(_roiR).copyTo(cropR);
+			cv::cvtColor(cropL, cropL, cv::COLOR_GRAY2BGR);
+			cv::cvtColor(cropR, cropR, cv::COLOR_GRAY2BGR);
+			cv::circle(cropL, cv::Point2f{ centerL.x - _roiL.x, centerL.y - _roiL.y }, 5, cv::Scalar{ 0, 0, 255 });
+			cv::circle(cropR, cv::Point2f{ centerR.x - _roiR.x, centerR.y - _roiR.y }, 5, cv::Scalar{ 0, 0, 255 });
+			cv::imshow("Left Crop", cropL);
+			cv::imshow("Right Crop", cropR);
+			cv::waitKey(0);
 #endif
 
-    std::vector<cv::Point2f> outputL, outputR;
-    std::vector<cv::Point2f> ptsL{centerL};
-    std::vector<cv::Point2f> ptsR{centerR};
-    cv::undistortPoints(ptsL, outputL, _camera_matL, _dst_coeffL, _R1, _P1);
-    cv::undistortPoints(ptsR, outputR, _camera_matR, _dst_coeffR, _R2, _P2);
+			std::vector<cv::Point2f> outputL, outputR;
+			std::vector<cv::Point2f> ptsL{ centerL };
+			std::vector<cv::Point2f> ptsR{ centerR };
+			cv::undistortPoints(ptsL, outputL, _camera_matL, _dst_coeffL, _R1, _P1);
+			cv::undistortPoints(ptsR, outputR, _camera_matR, _dst_coeffR, _R2, _P2);
 
-    std::vector<cv::Point3f> pts = doPerspectiveTransform(outputL, outputR);
+			std::vector<cv::Point3f> pts = doPerspectiveTransform(outputL, outputR);
 
-    pts[0].x -= 10.135; //Put into the center of the catchers frame. Maybe measure again
-    pts[0].y -= 29.0;
-    pts[0].z -= 21.0;
+			pts[0].x -= float(10.135); //Put into the center of the catchers frame. Maybe measure again
+			pts[0].y -= float(29.0);
+			pts[0].z -= 21.0f;
 
-    //Add pts to the A matrix
-    _pts.conservativeResize(_pts.rows() + 1, _pts.cols());
-    _pts.row(_pts.rows() - 1) = Eigen::RowVector3d(pts[0].x, pts[0].y, pts[0].z);
+			//Add pts to the A matrix
+			_pts.conservativeResize(_pts.rows() + 1, _pts.cols());
+			_pts.row(_pts.rows() - 1) = Eigen::RowVector3d(pts[0].x, pts[0].y, pts[0].z);
 
-    // TODO test roi update
-    //It currently throws an out of bounds error b/c roi extends past end of img (after)
-    //Check if it saturates
-    if(_counter<=30)
-    {
-      _roiL.x = (floor(centerL.x) - 25 < 0) ? 0 : int(centerL.x) - 25;
-      _roiL.y = (floor(centerL.y) - 20 < 0) ? 0 : int(centerL.y) - 20;
-      _roiL.width += 1;
-      _roiL.height += 2;
-      _roiR.x = (floor(centerR.x - _roiR.width/2.0) < 0) ? 0 : int(centerR.x - _roiR.width/2.0);
-      _roiR.y = (floor(centerR.y) - 20 < 0) ? 0 : int(centerR.y) - 20;
-      _roiR.width += 1;
-      _roiR.height += 2;
-    }
+			// TODO test roi update
+			//It currently throws an out of bounds error b/c roi extends past end of img (after)
+			//Check if it saturates
+			if (_counter <= 30)
+			{
+				_roiL.x = (floor(centerL.x) - 25 < 0) ? 0 : int(centerL.x) - 25;
+				_roiL.y = (floor(centerL.y) - 20 < 0) ? 0 : int(centerL.y) - 20;
+				_roiL.width += 1;
+				_roiL.height += 2;
+				_roiR.x = (floor(centerR.x - _roiR.width / 2.0) < 0) ? 0 : int(centerR.x - _roiR.width / 2.0);
+				_roiR.y = (floor(centerR.y) - 20 < 0) ? 0 : int(centerR.y) - 20;
+				_roiR.width += 1;
+				_roiR.height += 2;
+			}
 
-    if(_counter % 15 == 0)
-      return true;
-  }
-  return false;
+			if (_counter % 15 == 0)
+				return true;
+		}
+	}
+    return false;
 }
 
 cv::Point2f Tracker::calcMoment(cv::Mat g_img, cv::Mat background)
