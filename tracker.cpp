@@ -3,6 +3,30 @@
 
 #define DEBUG
 
+Tracker::Tracker()
+{
+	resetROI();
+
+	std::string filename{ "../stereo_params.yaml" };
+	cv::FileStorage fin(filename, cv::FileStorage::READ);
+	fin["Camera_MatrixL"] >> _camera_matL;
+	fin["Distortion_ParamsL"] >> _dst_coeffL;
+	fin["Camera_MatrixR"] >> _camera_matR;
+	fin["Distortion_ParamsR"] >> _dst_coeffL;
+	fin["R"] >> _R;
+	fin["T"] >> _T;
+	fin["E"] >> E;
+	fin["F"] >> F;
+	fin["R1"] >> _R1;
+	fin["R2"] >> _R2;
+	fin["P1"] >> _P1;
+	fin["P2"] >> _P2;
+	fin["Q"] >> _Q;
+
+	_counter = 0;
+	_back_count = 0;
+}
+
 Tracker::Tracker(cv::Mat imgL, cv::Mat imgR)
 {
   //could hardcode the roi's instead of passing in
@@ -21,8 +45,8 @@ Tracker::Tracker(cv::Mat imgL, cv::Mat imgR)
   fin["Distortion_ParamsR"] >> _dst_coeffL;
   fin["R"] >> _R;
   fin["T"] >> _T;
-  fin["E"] >> _E;
-  fin["F"] >> _F;
+  fin["E"] >> E;
+  fin["F"] >> F;
   fin["R1"] >> _R1;
   fin["R2"] >> _R2;
   fin["P1"] >> _P1;
@@ -30,12 +54,38 @@ Tracker::Tracker(cv::Mat imgL, cv::Mat imgR)
   fin["Q"] >> _Q;
 
   _counter = 0;
+  _back_count = 0;
 }
 
 void Tracker::setImages(cv::Mat imgL, cv::Mat imgR)
 {
-  cv::cvtColor(imgL, _imgL, cv::COLOR_BGR2GRAY);
-  cv::cvtColor(imgR, _imgR, cv::COLOR_BGR2GRAY);
+  _imgL = imgL.clone();
+	_imgR = imgR.clone();
+
+  if (_back_count == 0)
+  {
+	  _imgL.copyTo(_backgroundL);
+	  _imgR.copyTo(_backgroundR);
+	  _backgroundL.convertTo(_backgroundL, CV_32F);
+	  _backgroundR.convertTo(_backgroundR, CV_32F);
+  }
+  else if (_back_count < 100)
+  {
+	  _imgL.convertTo(_imgL, CV_32F);
+	  _imgR.convertTo(_imgR, CV_32F);
+	  _backgroundL += _imgL;
+	  _backgroundR += _imgR;
+	  _imgL.convertTo(_imgL, CV_8U);
+	  _imgR.convertTo(_imgR, CV_8U);
+  }
+  else if (_back_count == 100)
+  {
+	  _backgroundL /= 100.0;
+	  _backgroundR /= 100.0;
+	  _backgroundL.convertTo(_backgroundL, CV_8U);
+	  _backgroundR.convertTo(_backgroundR, CV_8U);
+  }
+  _back_count++;
 }
 
 cv::Point2f Tracker::calcCatcherPosition()
@@ -58,8 +108,6 @@ cv::Point2f Tracker::calcCatcherPosition()
   std::cout << "X: " << x << "\n";
   std::cout << "Y: " << y << "\n";
 
-  // Eigen::RowVector3d pt; //Don't need to do matrix multiply. Just need last value in x and y
-  // pt << 0.0, 0.0, 1;
   cv::Point2f pt{-x(2), y(2)}; //Negative sign to put in catcher frame
   return pt;
 }
