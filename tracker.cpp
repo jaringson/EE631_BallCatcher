@@ -67,6 +67,7 @@ void Tracker::setImages(cv::Mat imgL, cv::Mat imgR)
   cv::cvtColor(imgL, _imgL, cv::COLOR_BGR2GRAY);
   cv::cvtColor(imgR, _imgR, cv::COLOR_BGR2GRAY);
 #endif
+
   if (_back_count == 0)
   {
 	  _imgL.copyTo(_backgroundL);
@@ -96,7 +97,7 @@ void Tracker::setImages(cv::Mat imgL, cv::Mat imgR)
 cv::Point2f Tracker::calcCatcherPosition()
 {
   Eigen::VectorXd bx = _pts.col(0);
-  Eigen::VectorXd by = -_pts.col(1);
+  Eigen::VectorXd by = _pts.col(1);
 
   Eigen::Matrix<double, Eigen::Dynamic, 3> A;
   A = Eigen::MatrixXd::Zero(_pts.rows(),3);
@@ -120,10 +121,28 @@ bool Tracker::calcBallPosition()
 		cv::Point2f centerL{ calcMoment(_imgL(_roiL), _backgroundL(_roiL)) };
 		cv::Point2f centerR{ calcMoment(_imgR(_roiR), _backgroundR(_roiR)) };
 
-		if (centerL.x == 0 && centerL.y == 0 && centerR.x == 0 && centerR.y == 0)
+		if ((centerL.x == 0 && centerL.y == 0) && (centerR.x == 0 && centerR.y == 0))
 		{
 			resetROI();
 			_counter = 0;
+		}
+		else if((centerL.x != 0 && centerL.y != 0) && (centerR.x == 0 && centerR.y == 0))
+		{
+			centerL.x += _roiL.x;
+			centerL.y += _roiL.y;
+			_roiL.x = (floor(centerL.x) - 25 < 0) ? 0 : int(centerL.x) - 25;
+			_roiL.y = (floor(centerL.y) - 20 < 0) ? 0 : int(centerL.y) - 20;
+			_roiL.width += 1;
+			_roiL.height += 2;
+		}
+		else if((centerL.x == 0 && centerL.y == 0) && (centerR.x != 0 && centerR.y != 0))
+		{
+			centerR.x += _roiR.x;
+			centerR.y += _roiR.y;
+			_roiR.x = (floor(centerR.x - _roiR.width / 2.0) < 0) ? 0 : int(centerR.x - _roiR.width / 2.0);
+			_roiR.y = (floor(centerR.y) - 20 < 0) ? 0 : int(centerR.y) - 20;
+			_roiR.width += 1;
+			_roiR.height += 2;
 		}
 		else
 		{
@@ -154,9 +173,9 @@ bool Tracker::calcBallPosition()
 
 			std::vector<cv::Point3f> pts = doPerspectiveTransform(outputL, outputR);
 
-			pts[0].x -= float(10.135); //Put into the center of the catchers frame. Maybe measure again
-			pts[0].y -= float(29.0);
-			pts[0].z -= 21.0f;
+			pts[0].x -= float(10.5); //Put into the center of the catchers frame. Maybe measure again
+			pts[0].y -= float(30.0);
+			pts[0].z -= 21.5f;
 
 			//Add pts to the A matrix
 			_pts.conservativeResize(_pts.rows() + 1, _pts.cols());
@@ -187,7 +206,7 @@ bool Tracker::calcBallPosition()
 cv::Point2f Tracker::calcMoment(cv::Mat g_img, cv::Mat background)
 {
   g_img = absoluteDifference(g_img, background);
-  g_img = computeThreshold(g_img, 20);
+  g_img = computeThreshold(g_img, 20); //was 20. try 10
   g_img = cleanUpNoise(g_img);
 
   cv::Moments m{cv::moments(g_img, true)};

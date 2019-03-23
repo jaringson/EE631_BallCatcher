@@ -6,7 +6,8 @@
 
 int main()
 {
-  std::string filenameL("../baseball/ballL"), filenameR("../baseball/ballR");
+  // std::string filenameL("../baseball/ballL"), filenameR("../baseball/ballR"); //Use threshold 20
+  std::string filenameL("../test2/L"), filenameR("../test2/R");
   std::string file_ext(".bmp");
 
   cv::Mat imgL, imgR, backgroundL, backgroundR;
@@ -25,6 +26,7 @@ int main()
 
     imgL = cv::imread(filenameL + file_num + file_ext);
     imgR = cv::imread(filenameR + file_num + file_ext);
+    // std::cout << i << std::endl;
     tracker.setImages(imgL, imgR);
     bool calc_catcher = tracker.calcBallPosition();
 
