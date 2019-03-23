@@ -196,7 +196,7 @@ bool Tracker::calcBallPosition()
                 _roiR.x = (int(centerR.x) - _roiR.width/2 < 0) ? 0 : int(centerR.x) - _roiR.width/2;
                 _roiR.y = (int(centerR.y) - 20 < 0) ? 0 : int(centerR.y) - 20;
                 _roiR.x = (int(centerR.x) - _roiR.width/2 + _roiR.width > 640) ? 640 - _roiR.width : int(centerR.x) - _roiR.width/2;
-                _roiR.y = (int(centerR.y) - 20 + _roiR.height > 480) ? 480 - _roiR.height : int(centerL.y) - 20;
+                _roiR.y = (int(centerR.y) - 20 + _roiR.height > 480) ? 480 - _roiR.height : int(centerR.y) - 20;
                 _roiR.width += 1;
                 _roiR.height += 2;
             }
