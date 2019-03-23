@@ -1,7 +1,9 @@
 #include "tracker.h"
 #include <string>
+#include <iostream>
 
 #define DEBUG
+#define VIDEO
 
 Tracker::Tracker()
 {
@@ -54,14 +56,17 @@ Tracker::Tracker(cv::Mat imgL, cv::Mat imgR)
   fin["Q"] >> _Q;
 
   _counter = 0;
-  _back_count = 0;
+  _back_count = 200;
 }
 
 void Tracker::setImages(cv::Mat imgL, cv::Mat imgR)
 {
   _imgL = imgL.clone();
 	_imgR = imgR.clone();
-
+#ifdef VIDEO
+  cv::cvtColor(imgL, _imgL, cv::COLOR_BGR2GRAY);
+  cv::cvtColor(imgR, _imgR, cv::COLOR_BGR2GRAY);
+#endif
   if (_back_count == 0)
   {
 	  _imgL.copyTo(_backgroundL);
@@ -103,10 +108,6 @@ cv::Point2f Tracker::calcCatcherPosition()
   //I think we want to solve with colPivHouseholderQR (more accurate) or HouseholderQR (faster)
   x = A.colPivHouseholderQr().solve(bx);
   y = A.colPivHouseholderQr().solve(by);
-
-
-  std::cout << "X: " << x << "\n";
-  std::cout << "Y: " << y << "\n";
 
   cv::Point2f pt{-x(2), y(2)}; //Negative sign to put in catcher frame
   return pt;
