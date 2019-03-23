@@ -7,26 +7,26 @@
 
 Tracker::Tracker()
 {
-	resetROI();
+    resetROI();
 
-	std::string filename{ "../stereo_params.yaml" };
-	cv::FileStorage fin(filename, cv::FileStorage::READ);
-	fin["Camera_MatrixL"] >> _camera_matL;
-	fin["Distortion_ParamsL"] >> _dst_coeffL;
-	fin["Camera_MatrixR"] >> _camera_matR;
-	fin["Distortion_ParamsR"] >> _dst_coeffL;
-	fin["R"] >> _R;
-	fin["T"] >> _T;
-	fin["E"] >> E;
-	fin["F"] >> F;
-	fin["R1"] >> _R1;
-	fin["R2"] >> _R2;
-	fin["P1"] >> _P1;
-	fin["P2"] >> _P2;
-	fin["Q"] >> _Q;
+    std::string filename{ "../stereo_params.yaml" };
+    cv::FileStorage fin(filename, cv::FileStorage::READ);
+    fin["Camera_MatrixL"] >> _camera_matL;
+    fin["Distortion_ParamsL"] >> _dst_coeffL;
+    fin["Camera_MatrixR"] >> _camera_matR;
+    fin["Distortion_ParamsR"] >> _dst_coeffL;
+    fin["R"] >> _R;
+    fin["T"] >> _T;
+    fin["E"] >> E;
+    fin["F"] >> F;
+    fin["R1"] >> _R1;
+    fin["R2"] >> _R2;
+    fin["P1"] >> _P1;
+    fin["P2"] >> _P2;
+    fin["Q"] >> _Q;
 
-	_counter = 0;
-	_back_count = 0;
+    _counter = 0;
+    _back_count = 0;
 }
 
 Tracker::Tracker(cv::Mat imgL, cv::Mat imgR)
@@ -62,33 +62,33 @@ Tracker::Tracker(cv::Mat imgL, cv::Mat imgR)
 void Tracker::setImages(cv::Mat imgL, cv::Mat imgR)
 {
   _imgL = imgL.clone();
-	_imgR = imgR.clone();
+    _imgR = imgR.clone();
 #ifdef VIDEO
   cv::cvtColor(imgL, _imgL, cv::COLOR_BGR2GRAY);
   cv::cvtColor(imgR, _imgR, cv::COLOR_BGR2GRAY);
 #endif
   if (_back_count == 0)
   {
-	  _imgL.copyTo(_backgroundL);
-	  _imgR.copyTo(_backgroundR);
-	  _backgroundL.convertTo(_backgroundL, CV_32F);
-	  _backgroundR.convertTo(_backgroundR, CV_32F);
+      _imgL.copyTo(_backgroundL);
+      _imgR.copyTo(_backgroundR);
+      _backgroundL.convertTo(_backgroundL, CV_32F);
+      _backgroundR.convertTo(_backgroundR, CV_32F);
   }
   else if (_back_count < 100)
   {
-	  _imgL.convertTo(_imgL, CV_32F);
-	  _imgR.convertTo(_imgR, CV_32F);
-	  _backgroundL += _imgL;
-	  _backgroundR += _imgR;
-	  _imgL.convertTo(_imgL, CV_8U);
-	  _imgR.convertTo(_imgR, CV_8U);
+      _imgL.convertTo(_imgL, CV_32F);
+      _imgR.convertTo(_imgR, CV_32F);
+      _backgroundL += _imgL;
+      _backgroundR += _imgR;
+      _imgL.convertTo(_imgL, CV_8U);
+      _imgR.convertTo(_imgR, CV_8U);
   }
   else if (_back_count == 100)
   {
-	  _backgroundL /= 100.0;
-	  _backgroundR /= 100.0;
-	  _backgroundL.convertTo(_backgroundL, CV_8U);
-	  _backgroundR.convertTo(_backgroundR, CV_8U);
+      _backgroundL /= 100.0;
+      _backgroundR /= 100.0;
+      _backgroundL.convertTo(_backgroundL, CV_8U);
+      _backgroundR.convertTo(_backgroundR, CV_8U);
   }
   _back_count++;
 }
@@ -117,75 +117,75 @@ cv::Point2f Tracker::calcCatcherPosition()
 bool Tracker::calcBallPosition()
 {
   if (_back_count > 100)
-	{
-		cv::Point2f centerL{ calcMoment(_imgL(_roiL), _backgroundL(_roiL)) };
-		cv::Point2f centerR{ calcMoment(_imgR(_roiR), _backgroundR(_roiR)) };
+    {
+        cv::Point2f centerL{ calcMoment(_imgL(_roiL), _backgroundL(_roiL)) };
+        cv::Point2f centerR{ calcMoment(_imgR(_roiR), _backgroundR(_roiR)) };
 
-		if (centerL.x == 0 && centerL.y == 0 && centerR.x == 0 && centerR.y == 0)
-		{
-			resetROI();
-			_counter = 0;
-		}
-		else
-		{
-			_counter++;
-			centerL.x += _roiL.x;
-			centerL.y += _roiL.y;
-			centerR.x += _roiR.x;
-			centerR.y += _roiR.y;
+        if (centerL.x == 0 && centerL.y == 0 && centerR.x == 0 && centerR.y == 0)
+        {
+            resetROI();
+            _counter = 0;
+        }
+        else
+        {
+            _counter++;
+            centerL.x += _roiL.x;
+            centerL.y += _roiL.y;
+            centerR.x += _roiR.x;
+            centerR.y += _roiR.y;
 
 #ifdef DEBUG
-			cv::Mat cropL, cropR;
-			_imgL(_roiL).copyTo(cropL);
-			_imgR(_roiR).copyTo(cropR);
-			cv::cvtColor(cropL, cropL, cv::COLOR_GRAY2BGR);
-			cv::cvtColor(cropR, cropR, cv::COLOR_GRAY2BGR);
-			cv::circle(cropL, cv::Point2f{ centerL.x - _roiL.x, centerL.y - _roiL.y }, 5, cv::Scalar{ 0, 0, 255 });
-			cv::circle(cropR, cv::Point2f{ centerR.x - _roiR.x, centerR.y - _roiR.y }, 5, cv::Scalar{ 0, 0, 255 });
-			cv::imshow("Left Crop", cropL);
-			cv::imshow("Right Crop", cropR);
-			cv::waitKey(0);
+            cv::Mat cropL, cropR;
+            _imgL(_roiL).copyTo(cropL);
+            _imgR(_roiR).copyTo(cropR);
+            cv::cvtColor(cropL, cropL, cv::COLOR_GRAY2BGR);
+            cv::cvtColor(cropR, cropR, cv::COLOR_GRAY2BGR);
+            cv::circle(cropL, cv::Point2f{ centerL.x - _roiL.x, centerL.y - _roiL.y }, 5, cv::Scalar{ 0, 0, 255 });
+            cv::circle(cropR, cv::Point2f{ centerR.x - _roiR.x, centerR.y - _roiR.y }, 5, cv::Scalar{ 0, 0, 255 });
+            cv::imshow("Left Crop", cropL);
+            cv::imshow("Right Crop", cropR);
+            cv::waitKey(0);
 #endif
 
-			std::vector<cv::Point2f> outputL, outputR;
-			std::vector<cv::Point2f> ptsL{ centerL };
-			std::vector<cv::Point2f> ptsR{ centerR };
-			cv::undistortPoints(ptsL, outputL, _camera_matL, _dst_coeffL, _R1, _P1);
-			cv::undistortPoints(ptsR, outputR, _camera_matR, _dst_coeffR, _R2, _P2);
+            std::vector<cv::Point2f> outputL, outputR;
+            std::vector<cv::Point2f> ptsL{ centerL };
+            std::vector<cv::Point2f> ptsR{ centerR };
+            cv::undistortPoints(ptsL, outputL, _camera_matL, _dst_coeffL, _R1, _P1);
+            cv::undistortPoints(ptsR, outputR, _camera_matR, _dst_coeffR, _R2, _P2);
 
-			std::vector<cv::Point3f> pts = doPerspectiveTransform(outputL, outputR);
+            std::vector<cv::Point3f> pts = doPerspectiveTransform(outputL, outputR);
 
             pts[0].x -= float(10.5); //Put into the center of the catchers frame. Maybe measure again
             pts[0].y -= float(30.0);
             pts[0].z -= 21.5f;
 
-			//Add pts to the A matrix
-			_pts.conservativeResize(_pts.rows() + 1, _pts.cols());
+            //Add pts to the A matrix
+            _pts.conservativeResize(_pts.rows() + 1, _pts.cols());
             _pts.row(_pts.rows() - 1) = Eigen::RowVector3d(double(pts[0].x), double(pts[0].y), double(pts[0].z));
 
-			// TODO test roi update
-			//It currently throws an out of bounds error b/c roi extends past end of img (after)
-			//Check if it saturates
-			if (_counter <= 30)
-			{
+            // TODO test roi update
+            //It currently throws an out of bounds error b/c roi extends past end of img (after)
+            //Check if it saturates
+            if (_counter <= 30)
+            {
                 _roiL.x = (int(centerL.x) - 25 < 0) ? 0 : int(centerL.x) - 25;
                 _roiL.y = (int(centerL.y) - 20 < 0) ? 0 : int(centerL.y) - 20;
-                _roiL.x = (int(centerL.x) - 25 + _roiL.width > 640) ? 640 : int(centerL.x) - 25 + _roiL.width;
-                _roiL.y = (int(centerL.y) - 20 + _roiL.height > 480) ? 480 : int(centerL.y) - 20 + _roiL.height;
+                _roiL.x = (int(centerL.x) - 25 + _roiL.width > 640) ? 640 - _roiL.width : int(centerL.x) - 25;
+                _roiL.y = (int(centerL.y) - 20 + _roiL.height > 480) ? 480 - _roiL.height : int(centerL.y) - 20;
                 _roiL.width += 1;
-				_roiL.height += 2;
+                _roiL.height += 2;
                 _roiR.x = (int(centerR.x) - _roiR.width/2 < 0) ? 0 : int(centerR.x) - _roiR.width/2;
                 _roiR.y = (int(centerR.y) - 20 < 0) ? 0 : int(centerR.y) - 20;
-                _roiR.x = (int(centerR.x) - _roiR.width/2 + _roiR.width > 640) ? 640 : int(centerR.x) - _roiR.width/2 + _roiR.width;
-                _roiR.y = (int(centerR.y) - 20 + _roiR.height > 480) ? 480 : int(centerL.y) - 20 + _roiR.height;
+                _roiR.x = (int(centerR.x) - _roiR.width/2 + _roiR.width > 640) ? 640 - _roiR.width : int(centerR.x) - _roiR.width/2;
+                _roiR.y = (int(centerR.y) - 20 + _roiR.height > 480) ? 480 - _roiR.height : int(centerL.y) - 20;
                 _roiR.width += 1;
-				_roiR.height += 2;
-			}
+                _roiR.height += 2;
+            }
 
-			if (_counter % 15 == 0)
-				return true;
-		}
-	}
+            if (_counter % 15 == 0)
+                return true;
+        }
+    }
     return false;
 }
 
