@@ -1,8 +1,8 @@
+#define DEBUG
+#define VIDEO
 #include "tracker.h"
 #include <opencv2/opencv.hpp>
 #include <string>
-
-#define DEBUG
 
 int main()
 {
