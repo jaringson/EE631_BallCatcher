@@ -17,3 +17,6 @@ target_link_libraries(Tracker ${OpenCV_LIBS})
 
 add_executable(loadVid loadVideo.cpp)
 target_link_libraries(loadVid Tracker ${OpenCV_LIBS})
+
+add_executable(recordVid recordVid.cpp)
+target_link_libraries(recordVid ${OpenCV_LIBS})
